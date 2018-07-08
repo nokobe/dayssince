@@ -1,3 +1,6 @@
+3.1 - Fixed redundant call to datePlusOffset
+	+ renamed function (parseDateWithDefault => parseDate)
+
 3.0 - Revamped to give proper separation between I/F and Model
 	- renamed Date object to Mydate
 	- better separation between function I/F and model

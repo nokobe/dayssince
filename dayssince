@@ -2,7 +2,7 @@
 use strict;
 
 # Mark Bates
-# Version 3.0
+# Version 3.1
 # June 2018
 
 use Date::Calc qw/Today Delta_Days Add_Delta_Days/;
@@ -23,11 +23,11 @@ sub performAction {
 	if ($action eq 'todayPlusOffset') {
 		printlnDate( datePlusOffset(makeMydate(Today()), $arg1) );
 	} elsif ($action eq 'date') {
-		print dateDate( parseDateWithDefault($arg1), makeMydate(Today()) ), "\n";
+		print dateDate( parseDate($arg1), makeMydate(Today()) ), "\n";
 	} elsif ($action eq 'datePlusOffset') {
-		printlnDate( datePlusOffset( datePlusOffset( parseDateWithDefault($arg1), $arg2 ) ) );
+		printlnDate( datePlusOffset( parseDate($arg1), $arg2 ) );
 	} elsif ($action eq 'dateDate') {
-		print dateDate( parseDateWithDefault($arg1),parseDateWithDefault($arg2) ), "\n";
+		print dateDate( parseDate($arg1), parseDate($arg2) ), "\n";
 	} else {
 		print "Error ($action): unknown action\n";
 	}
@@ -90,8 +90,9 @@ sub unpackMydate {
 
 ### HELPER ROUTINES ######################################################################################
 
+# parse input into date. Uses today (day, month, year) to fill in any missing pieces.
 # returns: mydate
-sub parseDateWithDefault {
+sub parseDate {
 	my $arg = shift;
 	my ($curryear, $currmonth, $currday) = Today();
 

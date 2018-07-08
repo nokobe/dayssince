@@ -3,33 +3,49 @@
 FN="./dayssince"
 
 # these are relative and will be have to be adjusted for each different day you want to run the tests
-Q1="8/7"		A1=0
-Q2="15/7"		A2=-7
-Q3="1/7"		A3=7
+# These test relative dates. date(1) is used to determine what the correct output should be.
 
-Q4="+7"			A4="15/7/2018"
-Q5="+180"		A5="4/1/2019"
-Q6="-30"		A6="8/6/2018"
+Q1="$(date +%d/%m)"		A1=0
+Q2="$(date -v+1d +'%d/%m/%Y')"	A2=-1
+Q3="$(date -v-1d +'%d/%m/%Y')"	A3=1
+Q4="$(date -v+7d +'%d/%m/%Y')"	A4=-7
+Q5="$(date -v-7d +'%d/%m/%Y')"	A5=7
 
-# these tests should produce the same results no matter what day you run them
-Q7="1/9 +10"		A7="11/9/2018"
-Q8="1/9 -10"		A8="22/8/2018"
-Q9="9/1/2019 +30"	A9="8/2/2019"
+# Tests 6 to 10 make incorrectly be reported as failures due to date(1) adding leading zero's
 
-Q10="11/8 8/11"		A10="89"
-Q11="10/12 9/1"		A11="-335"
-Q12="7/7/2018 8/7/2018"	A12="1"
+Q6="+1"			A6="$(date -v+1d +'%d/%m/%Y')"
+Q7="-1"			A7="$(date -v-1d +'%d/%m/%Y')"
+Q8="+7"			A8="$(date -v+7d +'%d/%m/%Y')"
+Q9="+180"		A9="$(date -v+180d +'%d/%m/%Y')"
+Q10="-30"		A10="$(date -v-30d +'%d/%m/%Y')"
 
-LASTTEST=12
+# Static tests
+
+Q11="1/9 +1"		A11="2/9/2018"
+Q12="1/9 +10"		A12="11/9/2018"
+Q13="1/9 -1"		A13="31/8/2018"
+Q14="1/9 -10"		A14="22/8/2018"
+Q15="9/1/2019 +30"	A15="8/2/2019"
+
+Q16="11/8 8/11"		A16="89"
+Q17="10/12 9/1"		A17="-335"
+Q18="7/7/2018 8/7/2018"	A18="1"
+Q19="6/6/2018 5/6/2018"	A19="-1"
+
+LASTTEST=19
 FAIL=0
 
 onlyDigits() {
-        case $1 in *[!-0-9]*) false;; esac
+	for arg
+	do
+		case $arg in *[!-0-9]*) return 1;; esac
+	done
+	true
 }
 
 #usage: expect $a $b $failure_message
 function expect {
-	if onlyDigits "$2"; then
+	if onlyDigits "$1" "$2"; then
 		if [ "$1" -ne "$2" ]; then
 			echo "	FAIL: $3"
 			let FAIL++

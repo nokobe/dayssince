@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+use strict;
+
+use Date::Calc qw/Today Delta_Days/;
+
+die "Usage: $0 dd/mm/yy[yy] [dd/mm/[yy]]\n" unless @ARGV >= 1;
+
+my ($d2, $m2, $y2);
+
+my ($d, $m, $y) = parseDateWithDefault(shift);
+
+if (@ARGV) {
+	($d2, $m2, $y2) = parseDateWithDefault(shift);
+
+	print Delta_Days($y,$m,$d, $y2,$m2,$d2), "\n";
+} else {
+	my ($ty, $tm, $td) = Today();
+
+	print Delta_Days($y,$m,$d, $ty,$tm,$td), "\n";
+}
+
+exit 0;
+
+sub parseDateWithDefault {
+	my $arg = shift;
+	my ($curryear, $currmonth, $currday) = Today();
+
+	my ($d, $m, $y) = split /\//, $arg, 3;
+	$y = $curryear unless $y;
+	$m = $currmonth unless $m;
+
+	return ($d, $m, $y);
+}

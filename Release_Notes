@@ -1,3 +1,14 @@
+2.0 - Added functions
+	Can now provide offsets to calculate a new date
+	or provide any two dates and calculate the number of days between
+	eg can now ask:
+		+/-{n}		- calculate new date n days from now
+		{date}		- (as before) calculate number of days since {date}
+		{date} +/-{n}	- calculate new date {n} days from {date}
+		{date} {date}	- calculate number of days between dates
+
+	Added testsuite function
+
 1.0 - initial version
 
 Days Since - calculate number of days since a given date

@@ -1,25 +1,74 @@
 #!/usr/bin/perl
 use strict;
 
-use Date::Calc qw/Today Delta_Days/;
+# Mark Bates
+# Version 2.0
+# June 2018
 
-die "Usage: $0 dd/mm/yy[yy] [dd/mm/[yy]]\n" unless @ARGV >= 1;
+my $DEBUG = 0;
 
-my ($d2, $m2, $y2);
+use Date::Calc qw/Today Delta_Days Add_Delta_Days/;
 
-my ($d, $m, $y) = parseDateWithDefault(shift);
+die "Usage: $0 {-n|+n|dd/mm/yy[yy]} [-n|+n|dd/mm/[yy]]\n" unless @ARGV >= 1;
 
-if (@ARGV) {
-	($d2, $m2, $y2) = parseDateWithDefault(shift);
+my ($action, $arg1, $arg2) = &processArgs(@ARGV);
+&calculateDaysSince($action, $arg1, $arg2);
+exit 0;
 
-	print Delta_Days($y,$m,$d, $y2,$m2,$d2), "\n";
-} else {
-	my ($ty, $tm, $td) = Today();
+sub calculateDaysSince {
+	my ($action, $arg1, $arg2) = @_;
 
-	print Delta_Days($y,$m,$d, $ty,$tm,$td), "\n";
+	print "action = $action\n" if $DEBUG;
+
+	if ($action eq 'todayplusminusN') {
+		printlnDate(get_date_n_days_from_now($arg1));
+	} elsif ($action eq 'date') {
+		my $date = parseDateWithDefault($arg1);
+		print Delta_Days(unpackDate($date), Today()), "\n";
+	} elsif ($action eq 'dateplusminusN') {
+		my $result = get_date_plus_n_days(
+			parseDateWithDefault($arg1),
+			$arg2
+		);
+		printlnDate($result);
+	} elsif ($action eq 'datedate') {
+		print "acting on $arg1, $arg2\n" if $DEBUG;
+		my $n = Delta_Days(
+			unpackDate(parseDateWithDefault($arg1)),
+			unpackDate(parseDateWithDefault($arg2))
+		);
+		print "$n\n";
+	} else {
+		print "Error ($action): unknown action\n";
+	}
 }
 
-exit 0;
+sub processArgs {
+	die "Usage\n" if @_ == 0;
+	my ($arg1, $arg2) = @_;
+	if ($arg1 =~ /^[+-]/) {
+		$action = 'todayplusminusN';
+	} elsif ($arg2 =~ /^[+-]/) {
+		$action = 'dateplusminusN';
+	} else {
+		if ($arg2 eq "") {
+			$action = 'date';
+		} else {
+			$action = 'datedate';
+		}
+	}
+	return($action, $arg1, $arg2);
+}
+
+sub get_date_n_days_from_now {
+	return get_date_plus_n_days(makeDate(Today()), shift);
+}
+
+sub get_date_plus_n_days {
+	my ($date, $dd) = @_;
+
+	return makeDate(Add_Delta_Days(unpackDate($date), $dd));
+}
 
 sub parseDateWithDefault {
 	my $arg = shift;
@@ -29,5 +78,27 @@ sub parseDateWithDefault {
 	$y = $curryear unless $y;
 	$m = $currmonth unless $m;
 
-	return ($d, $m, $y);
+	return makeDate($y, $m, $d);
+}
+
+sub makeDate {
+	my ($y, $m, $d) = @_;
+
+	return {
+		'day' => $d,
+		'month' => $m,
+		'year' => $y
+	};
+}
+
+sub unpackDate {
+	my $date = shift;
+
+	return ($date->{'year'}, $date->{'month'}, $date->{'day'});
+}
+
+sub printlnDate {
+	my ($y, $m, $d) = unpackDate(shift);
+
+	print "$d/$m/$y\n";
 }

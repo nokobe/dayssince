@@ -2,42 +2,32 @@
 use strict;
 
 # Mark Bates
-# Version 2.0
+# Version 3.0
 # June 2018
-
-my $DEBUG = 0;
 
 use Date::Calc qw/Today Delta_Days Add_Delta_Days/;
 
 die "Usage: $0 {-n|+n|dd/mm/yy[yy]} [-n|+n|dd/mm/[yy]]\n" unless @ARGV >= 1;
 
 my ($action, $arg1, $arg2) = &processArgs(@ARGV);
-&calculateDaysSince($action, $arg1, $arg2);
+&performAction($action, $arg1, $arg2);
 exit 0;
 
-sub calculateDaysSince {
+# interface
+# given DATE, OFFSET => Calculate new date
+# given DATE, DATE   => Calculate datediff (n days difference between dates)
+
+sub performAction {
 	my ($action, $arg1, $arg2) = @_;
 
-	print "action = $action\n" if $DEBUG;
-
-	if ($action eq 'todayplusminusN') {
-		printlnDate(get_date_n_days_from_now($arg1));
+	if ($action eq 'todayPlusOffset') {
+		printlnDate( datePlusOffset(makeMydate(Today()), $arg1) );
 	} elsif ($action eq 'date') {
-		my $date = parseDateWithDefault($arg1);
-		print Delta_Days(unpackDate($date), Today()), "\n";
-	} elsif ($action eq 'dateplusminusN') {
-		my $result = get_date_plus_n_days(
-			parseDateWithDefault($arg1),
-			$arg2
-		);
-		printlnDate($result);
-	} elsif ($action eq 'datedate') {
-		print "acting on $arg1, $arg2\n" if $DEBUG;
-		my $n = Delta_Days(
-			unpackDate(parseDateWithDefault($arg1)),
-			unpackDate(parseDateWithDefault($arg2))
-		);
-		print "$n\n";
+		print dateDate( parseDateWithDefault($arg1), makeMydate(Today()) ), "\n";
+	} elsif ($action eq 'datePlusOffset') {
+		printlnDate( datePlusOffset( datePlusOffset( parseDateWithDefault($arg1), $arg2 ) ) );
+	} elsif ($action eq 'dateDate') {
+		print dateDate( parseDateWithDefault($arg1),parseDateWithDefault($arg2) ), "\n";
 	} else {
 		print "Error ($action): unknown action\n";
 	}
@@ -47,41 +37,41 @@ sub processArgs {
 	die "Usage\n" if @_ == 0;
 	my ($arg1, $arg2) = @_;
 	if ($arg1 =~ /^[+-]/) {
-		$action = 'todayplusminusN';
+		$action = 'todayPlusOffset';
 	} elsif ($arg2 =~ /^[+-]/) {
-		$action = 'dateplusminusN';
+		$action = 'datePlusOffset';
 	} else {
 		if ($arg2 eq "") {
 			$action = 'date';
 		} else {
-			$action = 'datedate';
+			$action = 'dateDate';
 		}
 	}
 	return($action, $arg1, $arg2);
 }
 
-sub get_date_n_days_from_now {
-	return get_date_plus_n_days(makeDate(Today()), shift);
+
+### MODEL ACTION ######################################################################################
+#
+# given DATE + OFFSET => Calculate new date
+# given DATE + DATE   => Calculate datediff (n days difference between dates)
+
+# returns: mydate
+sub datePlusOffset {
+	my ($mydate, $offset) = @_;
+
+	return makeMydate(Add_Delta_Days(unpackMydate($mydate), $offset));
 }
 
-sub get_date_plus_n_days {
-	my ($date, $dd) = @_;
+# returns: integer (n days difference b/n dates)
+sub dateDate {
+	my ($d1, $d2) = @_;
 
-	return makeDate(Add_Delta_Days(unpackDate($date), $dd));
+	return Delta_Days( unpackMydate($d1), unpackMydate($d2) );
 }
 
-sub parseDateWithDefault {
-	my $arg = shift;
-	my ($curryear, $currmonth, $currday) = Today();
-
-	my ($d, $m, $y) = split /\//, $arg, 3;
-	$y = $curryear unless $y;
-	$m = $currmonth unless $m;
-
-	return makeDate($y, $m, $d);
-}
-
-sub makeDate {
+# returns: mydate
+sub makeMydate {
 	my ($y, $m, $d) = @_;
 
 	return {
@@ -91,14 +81,29 @@ sub makeDate {
 	};
 }
 
-sub unpackDate {
-	my $date = shift;
+# returns: ({year}, {month}, {day})
+sub unpackMydate {
+	my $mydate = shift;
 
-	return ($date->{'year'}, $date->{'month'}, $date->{'day'});
+	return ($mydate->{'year'}, $mydate->{'month'}, $mydate->{'day'});
+}
+
+### HELPER ROUTINES ######################################################################################
+
+# returns: mydate
+sub parseDateWithDefault {
+	my $arg = shift;
+	my ($curryear, $currmonth, $currday) = Today();
+
+	my ($d, $m, $y) = split /\//, $arg, 3;
+	$y = $curryear unless $y;
+	$m = $currmonth unless $m;
+
+	return makeMydate($y, $m, $d);
 }
 
 sub printlnDate {
-	my ($y, $m, $d) = unpackDate(shift);
+	my ($y, $m, $d) = unpackMydate(shift);
 
 	print "$d/$m/$y\n";
 }

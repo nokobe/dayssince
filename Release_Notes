@@ -1,3 +1,7 @@
+3.0 - Revamped to give proper separation between I/F and Model
+	- renamed Date object to Mydate
+	- better separation between function I/F and model
+
 2.0 - Added functions
 	Can now provide offsets to calculate a new date
 	or provide any two dates and calculate the number of days between
